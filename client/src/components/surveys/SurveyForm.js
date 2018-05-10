@@ -1,30 +1,62 @@
 import React, { Component } from "react";
 import { reduxForm, Field } from "redux-form";
+import { Link } from "react-router-dom";
 import SurveyField from "./SurveyField";
+import validateEmails from "../../utils/validateEmails";
+
+const FIELDS = [
+  { key: 1, label: "Survey Title", name: "title", errorMsg: " - You must provide a title" },
+  { key: 2, label: "Subject Line", name: "subject", errorMsg: " - You must provide a subject" },
+  { key: 3, label: "Email Body", name: "body", errorMsg: " - You must provide a body" },
+  {
+    key: 4,
+    label: "Recipient List",
+    name: "emails",
+    errorMsg: " - You must provide at least one recipient email address"
+  }
+];
 
 class SurveyForm extends Component {
   renderFields() {
-    return (
-      <div>
-        <Field label="Survey Title" type="text" name="title" component={SurveyField} />
-        <Field label="Subject Line" type="text" name="subject" component={SurveyField} />
-        <Field label="Email Body" type="text" name="body" component={SurveyField} />
-        <Field label="Recipient List" type="text" name="emails" component={SurveyField} />
-      </div>
-    );
+    return FIELDS.map(field => {
+      return <Field component={SurveyField} type="text" {...field} />;
+    });
   }
   render() {
     return (
       <div>
-        <form onSubmit={this.props.handleSubmit(values => console.log(values))}>
+        <form onSubmit={this.props.handleSubmit(this.props.onSurveySubmit)}>
           {this.renderFields()}
-          <button type="submit">submit</button>
+          <Link to="/surveys" className="red btn-flat white-text">
+            <i className="material-icons left">cancel</i>
+            Cancel
+          </Link>
+          <button type="submit" className="teal btn-flat right white-text">
+            <i className="material-icons left">done</i>
+            Next
+          </button>
         </form>
       </div>
     );
   }
 }
 
+function validate(values) {
+  const errors = {};
+
+  errors.emails = validateEmails(values.emails || "");
+
+  FIELDS.map(({ name, errorMsg }) => {
+    if (!values[name]) {
+      errors[name] = errorMsg;
+    }
+    return errors[name];
+  });
+
+  return errors;
+}
+
 export default reduxForm({
+  validate,
   form: "surveyForm"
 })(SurveyForm);
